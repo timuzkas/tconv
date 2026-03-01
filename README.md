@@ -12,6 +12,8 @@ go install github.com/timuzkas/tconv@latest
 
 or clone and `go build`
 
+Linux build available in Releases!
+
 ## usage
 
 ```
