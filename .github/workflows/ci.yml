@@ -1,0 +1,76 @@
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: Install GTK4
+        run: sudo apt-get install -y libgtk-4-dev libadwaita-1-dev
+
+      - name: Get short commit hash
+        id: vars
+        run: echo "SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name: Build x64
+        run: GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o tconv-${{ steps.vars.outputs.SHORT_SHA }}-x64 .
+
+      - name: Build x32
+        run: GOOS=linux GOARCH=386 go build -ldflags="-s -w" -o tconv-${{ steps.vars.outputs.SHORT_SHA }}-x32 .
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tconv-binaries
+          path: tconv-*
+
+  release:
+    needs: build
+    if: startsWith(github.event.head_commit.message, '[RELEASE]')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: Install GTK4
+        run: sudo apt-get install -y libgtk-4-dev libadwaita-1-dev
+
+      - name: Get short commit hash
+        id: vars
+        run: echo "SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name: Extract release version
+        run: |
+          VERSION=$(echo "${{ github.event.head_commit.message }}" | sed -n 's/^\[RELEASE\] *//p')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build x64
+        run: GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o tconv-${{ steps.vars.outputs.SHORT_SHA }}-x64 .
+
+      - name: Build x32
+        run: GOOS=linux GOARCH=386 go build -ldflags="-s -w" -o tconv-${{ steps.vars.outputs.SHORT_SHA }}-x32 .
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.vars.outputs.VERSION }}
+          name: Release ${{ steps.vars.outputs.VERSION }}
+          files: |
+            tconv-${{ steps.vars.outputs.SHORT_SHA }}-x64
+            tconv-${{ steps.vars.outputs.SHORT_SHA }}-x32
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
