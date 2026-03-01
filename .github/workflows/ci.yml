@@ -52,6 +52,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -62,15 +64,17 @@ jobs:
         run: echo "SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
 
       - name: Extract release version
+        id: version
         run: |
           VERSION=$(echo "${{ github.event.head_commit.message }}" | sed -n 's/^\[RELEASE\] *//p')
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
 
       - name: Create git tag
-        run: git tag -f ${{ steps.vars.outputs.VERSION }}
+        run: git tag -f ${{ steps.version.outputs.VERSION }}
 
       - name: Push tag
-        run: git push -f origin ${{ steps.vars.outputs.VERSION }}
+        run: git push -f origin ${{ steps.version.outputs.VERSION }}
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
