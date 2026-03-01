@@ -25,9 +25,6 @@ jobs:
       - name: Build x64
         run: CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o tconv-${{ steps.vars.outputs.SHORT_SHA }}-x64 .
 
-      - name: Build x32
-        run: CGO_ENABLED=1 GOOS=linux GOARCH=386 go build -ldflags="-s -w" -o tconv-${{ steps.vars.outputs.SHORT_SHA }}-x32 .
-
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -61,9 +58,6 @@ jobs:
       - name: Build x64
         run: CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o tconv-${{ steps.vars.outputs.SHORT_SHA }}-x64 .
 
-      - name: Build x32
-        run: CGO_ENABLED=1 GOOS=linux GOARCH=386 go build -ldflags="-s -w" -o tconv-${{ steps.vars.outputs.SHORT_SHA }}-x32 .
-
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -71,6 +65,5 @@ jobs:
           name: Release ${{ steps.vars.outputs.VERSION }}
           files: |
             tconv-${{ steps.vars.outputs.SHORT_SHA }}-x64
-            tconv-${{ steps.vars.outputs.SHORT_SHA }}-x32
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
