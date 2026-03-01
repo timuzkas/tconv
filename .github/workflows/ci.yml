@@ -68,19 +68,12 @@ jobs:
         run: |
           VERSION=$(echo "${{ github.event.head_commit.message }}" | sed -n 's/^\[RELEASE\] *//p')
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Extracted version: $VERSION"
-
-      - name: Create git tag
-        run: git tag -f ${{ steps.version.outputs.VERSION }}
-
-      - name: Push tag
-        run: git push -f origin ${{ steps.version.outputs.VERSION }}
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.vars.outputs.VERSION }}
-          name: Release ${{ steps.vars.outputs.VERSION }}
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          name: Release ${{ steps.version.outputs.VERSION }}
           files: tconv-${{ steps.vars.outputs.SHORT_SHA }}-x64
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
